@@ -1,0 +1,185 @@
+```{r}
+library(ecotox)
+library(ggplot2)
+#lamprey_tox
+```
+
+#Probit for Ebra storm in EPA with Copper
+
+```{r}
+Ebra_Storm_Cu_EPA <- LC_probit((response / total) ~ log10(dose_mg_L), p = c(15,30,50,75,99),
+               weights = total,
+               data = Ebra_storm_copper_LC50_EPA[Ebra_storm_copper_LC50_EPA$dose_mg_L != 0,])
+Ebra_Storm_Cu_EPA
+
+
+Ebra_Storm_Cu_EPAg <- ggplot(data = Ebra_storm_copper_LC50_EPA,
+              aes(x = dose_mg_L, y = (response / total))) +
+   geom_point() +
+   geom_smooth(method = "glm",
+               method.args = list(family = binomial(link = "probit")),
+               aes(weight = total), colour = "#FF0000", se = TRUE)
+
+Ebra_Storm_Cu_EPAg
+
+```
+
+#probit for E Brach STORM in EPA redo with better styling
+
+```{# Remove any possible zero doses to avoid log(0)}
+dat <- Ebra_storm_copper_LC50_EPA[Ebra_storm_copper_LC50_EPA$dose_mg_L != 0, ]
+
+# Make sure response and total exist and are numeric
+# Fit the probit model
+fit <- glm(
+  cbind(response, total - response) ~ log10(dose_mg_L),
+  family = binomial(link = "probit"),
+  data = dat
+)
+
+# Sequence of doses for smooth curve
+dose_seq <- seq(min(dat$dose_mg_L), max(dat$dose_mg_L), length.out = 200)
+pred_dat <- data.frame(dose_mg_L = dose_seq)
+
+# Predict mortality and confidence intervals (on probit scale)
+pred <- predict(fit, newdata = pred_dat, type = "link", se.fit = TRUE)
+
+# Convert to probability scale
+pred_dat$mortality <- pnorm(pred$fit)
+pred_dat$upper <- pnorm(pred$fit + 1.96 * pred$se.fit)
+pred_dat$lower <- pnorm(pred$fit - 1.96 * pred$se.fit)
+
+library(ggplot2)
+
+ggplot() +
+  # Confidence ribbon
+  geom_ribbon(
+    data = pred_dat,
+    aes(x = dose_mg_L, ymin = lower, ymax = upper),
+    fill = "#69b3a2", alpha = 0.4
+  ) +
+  # Fitted curve line
+  geom_line(
+    data = pred_dat,
+    aes(x = dose_mg_L, y = mortality),
+    color = "#4183c4", size = 1.2
+  ) +
+  # Experimental points
+  geom_point(
+    data = dat,
+    aes(x = dose_mg_L, y = response / total),
+    size = 2, shape = 21, fill = "white", color = "#222"
+  ) +
+  labs(
+    x = expression(Cu~(mg/L)),   # Edit 'Cu' or 'CO[2]' as appropriate.
+    y = "Mortality",
+    title = "LC50 Probit: One Trial"
+  ) +
+  theme_classic(base_size = 15) +
+  theme(
+    legend.position = "none",
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14),
+    plot.title = element_text(size = 18, face = "bold")
+  )
+
+
+```
+
+#probit for Echi Ntemp in EPA
+
+```{r}
+
+Echi_Ntemp_Cu_EPA <- LC_probit(((response / total)) ~ log10(dose_mg_L), p = c(15,30,50,75,99),
+               weights = total,
+               data = Echi_Ntemp_copper_LC50_EPA[Echi_Ntemp_copper_LC50_EPA$dose_mg_L != 0,])
+Echi_Ntemp_Cu_EPA
+
+
+Echi_Ntemp_Cu_EPAg <- ggplot(data = Echi_Ntemp_copper_LC50_EPA,
+              aes(x = dose_mg_L, y = (response / total))) +
+   geom_point() +
+   geom_smooth(method = "glm",
+               method.args = list(family = binomial(link = "probit")),
+               aes(weight = total), colour = "#FF0000", se = TRUE)
+
+Echi_Ntemp_Cu_EPAg
+```
+
+#Probit for Yanira
+
+```{r}
+Yanira_caffeine <- LC_probit((response / total) ~ log10(dose), p = c(15,30,50,75,99),
+               weights = total,
+               data = Yanira_caffeine_Ebra_Storm_EPA[Yanira_caffeine_Ebra_Storm_EPA$dose != 0,])
+Yanira_caffeine
+
+Yanira_caffg <- ggplot(data = Yanira_caffeine_Ebra_Storm_EPA,
+              aes(x = dose, y = (response / total))) +
+   geom_point() +
+   geom_smooth(method = "glm",
+               method.args = list(family = binomial(link = "probit")),
+               aes(weight = total), colour = "#FF0000", se = TRUE)
+
+Yanira_caffg
+```
+
+#Ariel and Kayla
+
+```{r}
+m <- LC_probit((response / total) ~ log10(dose), p = c(50, 99),
+               weights = total,
+               data = Example1[Example1$nominal_dose != 0, ])
+m
+
+G <- ggplot(data = Example1,
+              aes(x =nominal_dose, y = (response / total)), xlim =c()) +
+   geom_point() +
+   geom_smooth(method = "glm",
+               method.args = list(family = binomial(link = "probit")),
+               aes(weight = total), colour = "#FF0000", se = TRUE)
+
+G
+
+
+```
+
+#probit for Echi RBC2 in EPA
+
+```{r}
+
+Echi_RBC2_Cu_EPA <- LC_probit(((response / total)) ~ log10(dose_mg_L), p = c(15,30,50,75,99),
+               weights = total,
+               data = Echi_RBC2_copper_LC50[Echi_RBC2_copper_LC50$dose_mg_L != 0,])
+Echi_RBC2_Cu_EPA
+
+
+Echi_RBC2_Cu_EPAg <- ggplot(data = Echi_RBC2_copper_LC50,
+              aes(x = dose_mg_L, y = (response / total))) +
+   geom_point() +
+   geom_smooth(method = "glm",
+               method.args = list(family = binomial(link = "probit")),
+               aes(weight = total), colour = "#FF0000", se = TRUE)
+
+Echi_RBC2_Cu_EPAg
+```
+
+#probit for Ebra Peccary in EPA
+
+```{r}
+
+Echi_Cu_EPA <- LC_probit(((response / total)) ~ log10(dose_mg_L), p = c(15,30,50,75,99),
+               weights = total,
+               data = Ebra_peccary_copper_LC50[Ebra_peccary_copper_LC50$dose_mg_L != 0,])
+Echi_Cu_EPA
+
+
+Echi_Cu_EPAg <- ggplot(data = Ebra_peccary_copper_LC50,
+              aes(x = dose_mg_L, y = (response / total))) +
+   geom_point() +
+   geom_smooth(method = "glm",
+               method.args = list(family = binomial(link = "probit")),
+               aes(weight = total), colour = "#FF0000", se = TRUE)
+
+Echi_Cu_EPAg
+```
